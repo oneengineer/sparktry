@@ -13,7 +13,7 @@ import org.apache.spark.mllib.util.MLUtils
 
 object HandingWriting2 extends App{
 
-  implicit val sc = new SparkContext("local[1]","appName")
+  implicit val sc = new SparkContext("local[3]","appName")
 
   val sqlContext = new org.apache.spark.sql.SQLContext(sc)
   import sqlContext.implicits._
@@ -28,8 +28,11 @@ object HandingWriting2 extends App{
 
   disable_log
 
-  val path = "file:////Users/xiaochen.tian/Google Drive/work/handwriting/training.svmfile"
-  val tpath = "file:////Users/xiaochen.tian/Google Drive/work/handwriting/testing.svmfile"
+  //val path = "file:////Users/xiaochen.tian/gd/work/handwriting/training.svmfile"
+  //val tpath = "file:////Users/xiaochen.tian/gd/work/handwriting/testing.svmfile"
+
+  val path = "file:////Users/xiaochen.tian/gd/work/handwriting/chinese_train_handwriting.svmfile"
+  val tpath = "file:////Users/xiaochen.tian/gd/work/handwriting/chinese_test_handwriting.svmfile"
 
 
   def main = {
@@ -37,16 +40,19 @@ object HandingWriting2 extends App{
 
     // Load training data
     val train = MLUtils.loadLibSVMFile(sc, path).toDF()
+
     val test = MLUtils.loadLibSVMFile(sc, tpath).toDF()
 
     // specify layers for the neural network:
     // input layer of size 4 (features), two intermediate of size 5 and 4 and output of size 3 (classes)
-    val layers = Array[Int](4, 5, 4, 3)
+    //val layers = Array[Int](784, 20,30, 100)
+    val layers = Array[Int](400, 20,30, 100)
+    //val layers = Array[Int](784, 20,20, 10)
     // create the trainer and set its parameters
     val trainer = new MultilayerPerceptronClassifier()
       .setLayers(layers)
       .setBlockSize(128)
-      .setSeed(1234L)
+      .setSeed(12345L)
       .setMaxIter(100)
     // train the model
     val model = trainer.fit(train)
@@ -55,10 +61,10 @@ object HandingWriting2 extends App{
     val predictionAndLabels = result.select("prediction", "label")
     val evaluator = new MulticlassClassificationEvaluator()
       .setMetricName("precision")
+
+
+    //result.rdd.zipWithIndex().filter { x=> x._1(0) != x._1(2) } collect() map( x => x._1(2) -> x._2 ) foreach println
     println("Precision:" + evaluator.evaluate(predictionAndLabels))
-
-
-    result.rdd.zipWithIndex().filter { x=> x._1(0) != x._1(2) } collect() map( x => x._1(2) -> x._2 ) foreach println
 
   }
 
